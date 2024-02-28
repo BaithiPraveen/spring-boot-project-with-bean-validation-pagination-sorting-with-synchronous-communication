@@ -30,6 +30,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RetryableException.class)
     public ResponseEntity<String> handleRetryableException(RetryableException ex){
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("DEPARTMENT-SERVICE IS NOT RUNNING..!");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("EXCEPTION DUE TO"+ex.getMessage()+"DEPARTMENT-SERVICE IS NOT RUNNING..!");
     }
 }

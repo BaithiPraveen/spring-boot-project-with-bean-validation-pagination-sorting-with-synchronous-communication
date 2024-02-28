@@ -58,6 +58,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                 .bodyToFlux(EmployeeDTO.class)
                 .collectList()
                 .block();
+        assert employeesDTO != null;
         return new PageImpl<>(employeesDTO, PageRequest.of(validatedOffset, validatedPageSize).withSort(Sort.Direction.ASC,ValidatedField), employeesDTO.size());
     }
 }
