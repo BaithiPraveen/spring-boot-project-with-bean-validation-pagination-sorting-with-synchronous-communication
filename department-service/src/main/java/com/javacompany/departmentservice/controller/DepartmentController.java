@@ -42,4 +42,14 @@ public class DepartmentController {
         return ResponseEntity.ok(departmentService.getEmployeeListWithDepartmentNameExample1(deptName, offset, pageSize, field));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<DepartmentDTO> updateDepartment(@PathVariable("id") Long id,@RequestBody DepartmentDTO departmentDTO) throws NoSuchFieldException, IllegalAccessException {
+        return ResponseEntity.ok(departmentService.updateDepartment(id,departmentDTO));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteDepartment(@PathVariable("id") Long id){
+        return ResponseEntity.ok(departmentService.deleteDepartment(id));
+    }
+
 }

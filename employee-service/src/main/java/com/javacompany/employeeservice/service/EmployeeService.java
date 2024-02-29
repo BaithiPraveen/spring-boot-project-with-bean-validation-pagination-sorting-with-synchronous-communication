@@ -21,4 +21,8 @@ public interface EmployeeService {
     Page<ResponseDTO> getEmployeeListWithDepartmentsByPaginationAndSorting(String field, Integer offset, Integer pageSize);
 
     Page<EmployeeDTO> getEmployeeListByDepartmentIdWithPaginationAndSorting(String deptId, String field, Integer offset, Integer pageSize);
+
+    EmployeeDTO updateEmployee(Long id, EmployeeDTO employeeDTO) throws IllegalAccessException, NoSuchFieldException;
+
+    String deleteEmployee(Long id);
 }

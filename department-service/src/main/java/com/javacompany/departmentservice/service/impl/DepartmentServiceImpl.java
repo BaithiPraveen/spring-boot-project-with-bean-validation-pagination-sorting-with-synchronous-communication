@@ -19,6 +19,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 @Service
@@ -55,6 +56,29 @@ public class DepartmentServiceImpl implements DepartmentService {
         String departmentCode = departmentObject.getDepartmentCode();
         return apiClient.getEmployeeListByDepartmentIdWithPaginationAndSorting(departmentCode, offset, pageSize, field);
     }
+
+    @Override
+    public DepartmentDTO updateDepartment(Long id, DepartmentDTO departmentDTO) throws IllegalAccessException, NoSuchFieldException {
+        Department department = departmentRepository.findById(id).get();
+        Field[] fields = DepartmentDTO.class.getFields();
+        for (Field field : fields){
+            field.setAccessible(true);
+            Object value = field.get(departmentDTO);
+            if(value !=null){
+                Field declaredField = department.getClass().getDeclaredField(field.getName());
+                declaredField.setAccessible(true);
+                declaredField.set(department,value);
+            }
+        }
+        return modelMapper.map(departmentRepository.save(department),DepartmentDTO.class);
+    }
+
+    @Override
+    public String deleteDepartment(Long id) {
+         departmentRepository.deleteById(id);
+         return id+" THIS DEPARTMENT SUCCESSFULLY DELETED...!";
+    }
+
 
     @Override
     public List<EmployeeDTO> getEmployeeListWithDepartmentNameExample1(String departmentName, Integer offset, Integer pageSize, String field) {

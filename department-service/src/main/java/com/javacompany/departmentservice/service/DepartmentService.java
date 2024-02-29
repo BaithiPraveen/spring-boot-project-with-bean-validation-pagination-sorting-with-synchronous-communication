@@ -17,4 +17,8 @@ public interface DepartmentService {
     List<EmployeeDTO> getEmployeeListWithDepartmentNameExample1(String departmentName, Integer offset, Integer pageSize, String field);
 
     Page<EmployeeDTO> getEmployeeListWithDepartmentName(String departmentName, Integer offset, Integer pageSize, String field);
+
+    DepartmentDTO updateDepartment(Long id, DepartmentDTO departmentDTO) throws IllegalAccessException, NoSuchFieldException;
+
+    String deleteDepartment(Long id);
 }

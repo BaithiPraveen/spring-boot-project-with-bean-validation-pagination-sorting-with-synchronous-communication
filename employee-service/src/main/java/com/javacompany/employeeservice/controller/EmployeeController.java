@@ -53,4 +53,14 @@ public class EmployeeController {
     public ResponseEntity<Page<EmployeeDTO>> getEmployeeListByDepartmentIdWithPaginationAndSorting(@PathVariable("deptId") String deptId,@RequestParam(value = "offset", required = false) Integer offset, @RequestParam(value = "pageSize", required = false) Integer pageSize, @RequestParam(value = "field", required = false) String field) {
         return ResponseEntity.ok(employeeService.getEmployeeListByDepartmentIdWithPaginationAndSorting(deptId,field, offset, pageSize));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable("id") Long id,@RequestBody EmployeeDTO employeeDTO) throws NoSuchFieldException, IllegalAccessException {
+        return ResponseEntity.ok(employeeService.updateEmployee(id,employeeDTO));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteEmployee(@PathVariable("id") Long id){
+        return ResponseEntity.ok(employeeService.deleteEmployee(id));
+    }
 }

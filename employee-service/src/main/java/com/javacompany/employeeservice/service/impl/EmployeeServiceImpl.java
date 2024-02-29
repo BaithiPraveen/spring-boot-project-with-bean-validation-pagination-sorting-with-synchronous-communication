@@ -1,5 +1,6 @@
 package com.javacompany.employeeservice.service.impl;
 
+import com.javacompany.employeeservice.ExceptionHandler.ResourceNotFoundException;
 import com.javacompany.employeeservice.dto.EmployeeDTO;
 import com.javacompany.employeeservice.dto.ResponseDTO;
 import com.javacompany.employeeservice.entity.Employee;
@@ -14,9 +15,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import java.lang.reflect.Field;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +33,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeDTO getEmployee(Long id) {
-        return modelMapper.map(employeeRepository.findById(id), EmployeeDTO.class);
+        return modelMapper.map(employeeRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("EMPLOYEE","EMPLOYEE-ID",id)), EmployeeDTO.class);
     }
 
     @Override
@@ -73,6 +73,29 @@ public class EmployeeServiceImpl implements EmployeeService {
         Pageable pageable = this.getPageableResponse(field,offset,pageSize);
         Page<Employee> employeePage = employeeRepository.findByDepartmentId(deptId, pageable);
         return employeePage.map(employee -> modelMapper.map(employee, EmployeeDTO.class));
+    }
+
+    @Override
+    public EmployeeDTO updateEmployee(Long id, EmployeeDTO employeeDTO) throws IllegalAccessException, NoSuchFieldException {
+        Employee employee = employeeRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("EMPLOYEE","EMPLOYEE-ID",id));
+        Field[] fields = EmployeeDTO.class.getDeclaredFields();
+        for (Field field : fields){
+            field.setAccessible(true);
+            Object value = field.get(employeeDTO);
+            if (value != null) {
+                Field employeeField = employee.getClass().getDeclaredField(field.getName());
+                employeeField.setAccessible(true);
+                employeeField.set(employee, value);
+            }
+        }
+        return modelMapper.map(employeeRepository.save(employee),EmployeeDTO.class);
+    }
+
+    @Override
+    public String deleteEmployee(Long id) {
+        Employee employee = employeeRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("EMPLOYEE","EMPLOYEE-ID",id));
+        employeeRepository.deleteById(id);
+        return "employee Id  : "+id+" deleted Successfully...!";
     }
 
     private Pageable getPageableResponse ( String field, Integer offset, Integer pageSize){
