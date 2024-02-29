@@ -1,5 +1,6 @@
 package com.javacompany.departmentservice.service.impl;
 
+import com.javacompany.departmentservice.ExceptionHandler.ResourceNotFoundException;
 import com.javacompany.departmentservice.dto.DepartmentDTO;
 import com.javacompany.departmentservice.dto.EmployeeDTO;
 import com.javacompany.departmentservice.entity.Department;
@@ -59,8 +60,8 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public DepartmentDTO updateDepartment(Long id, DepartmentDTO departmentDTO) throws IllegalAccessException, NoSuchFieldException {
-        Department department = departmentRepository.findById(id).get();
-        Field[] fields = DepartmentDTO.class.getFields();
+        Department department = departmentRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("DEPARTMENT","DEPARTMENT_ID",id));
+        Field[] fields = DepartmentDTO.class.getDeclaredFields();
         for (Field field : fields){
             field.setAccessible(true);
             Object value = field.get(departmentDTO);
@@ -75,7 +76,8 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public String deleteDepartment(Long id) {
-         departmentRepository.deleteById(id);
+        Department department = departmentRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("DEPARTMENT","DEPARTMENT_ID",id));
+        departmentRepository.deleteById(id);
          return id+" THIS DEPARTMENT SUCCESSFULLY DELETED...!";
     }
 
