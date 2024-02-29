@@ -5,15 +5,19 @@ import com.javacompany.departmentservice.dto.EmployeeDTO;
 import com.javacompany.departmentservice.entity.Department;
 import com.javacompany.departmentservice.repository.DepartmentRepository;
 import com.javacompany.departmentservice.service.DepartmentService;
+import com.javacompany.departmentservice.service.EmployeeAPIClient;
 import com.javacompany.departmentservice.utils.DefaultValues;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -24,6 +28,8 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentRepository departmentRepository;
     private final ModelMapper modelMapper;
     private final WebClient webClient;
+    private final RestTemplate restTemplate;
+    private final EmployeeAPIClient apiClient;
 
     @Override
     public DepartmentDTO saveDepartment(DepartmentDTO departmentDTO) {
@@ -38,27 +44,38 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public Page<DepartmentDTO> getDepartmentListWithPaginationAndSorting(Integer offset, Integer pageSize, String field) {
-        int validatedOffset = offset != null ? offset : DefaultValues.DEFAULT_OFFSET;
-        int validatedPageSize = pageSize != null ? pageSize : DefaultValues.DEFAULT_PAGE_SIZE;
-        String ValidatedField = (field == null || field.isEmpty() || field.isBlank()) ? DefaultValues.DEFAULT_FIELD : field;
-        Page<Department> departmentPage = departmentRepository.findAll(PageRequest.of(validatedOffset, validatedPageSize).withSort(Sort.Direction.ASC, ValidatedField));
+        Pageable pageable = this.getPageableResponse(field, offset, pageSize);
+        Page<Department> departmentPage = departmentRepository.findAll(pageable);
         return departmentPage.map(department -> modelMapper.map(department, DepartmentDTO.class));
     }
 
     @Override
     public Page<EmployeeDTO> getEmployeeListWithDepartmentName(String departmentName, Integer offset, Integer pageSize, String field) {
+        Department departmentObject = departmentRepository.findByDepartmentName(departmentName);
+        String departmentCode = departmentObject.getDepartmentCode();
+        return apiClient.getEmployeeListByDepartmentIdWithPaginationAndSorting(departmentCode, offset, pageSize, field);
+    }
+
+    @Override
+    public List<EmployeeDTO> getEmployeeListWithDepartmentNameExample1(String departmentName, Integer offset, Integer pageSize, String field) {
+        Department departmentObject = departmentRepository.findByDepartmentName(departmentName);
+        String departmentCode = departmentObject.getDepartmentCode();
+        String uri = "http://localhost:8080/api/employee/dept/" + departmentCode;
+        Flux<EmployeeDTO> employeeDTOFlux = webClient
+                .get()
+                .uri(uri)
+                .retrieve()
+                .bodyToFlux(EmployeeDTO.class);
+        Mono<List<EmployeeDTO>> employeesDTOMono = employeeDTOFlux.collectList();
+        return employeesDTOMono.block();
+    }
+
+    private Pageable getPageableResponse(String field, Integer offset, Integer pageSize) {
         int validatedOffset = offset != null ? offset : DefaultValues.DEFAULT_OFFSET;
         int validatedPageSize = pageSize != null ? pageSize : DefaultValues.DEFAULT_PAGE_SIZE;
-        String ValidatedField = (field == null || field.isEmpty() || field.isBlank()) ? DefaultValues.DEFAULT_FIELD : field;
-        Department departmentObject = departmentRepository.findByDepartmentName(departmentName);
-        List<EmployeeDTO> employeesDTO = webClient
-                .get()
-                .uri("http://localhost:8080/api/employee/dept/" + departmentObject.getDepartmentCode())
-                .retrieve()
-                .bodyToFlux(EmployeeDTO.class)
-                .collectList()
-                .block();
-        assert employeesDTO != null;
-        return new PageImpl<>(employeesDTO, PageRequest.of(validatedOffset, validatedPageSize).withSort(Sort.Direction.ASC,ValidatedField), employeesDTO.size());
+        String validatedField = (field == null || field.isEmpty() || field.isBlank()) ? DefaultValues.DEFAULT_FIELD : field;
+        return PageRequest.of(validatedOffset, validatedPageSize, Sort.by(Sort.Direction.ASC, validatedField));
     }
+
+
 }

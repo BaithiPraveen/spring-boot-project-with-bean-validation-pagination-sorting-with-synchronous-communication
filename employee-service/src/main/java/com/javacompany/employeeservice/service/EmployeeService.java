@@ -12,7 +12,7 @@ public interface EmployeeService {
 
     EmployeeDTO getEmployee(Long id);
 
-    List<EmployeeDTO> getEmployeeListBySorting(String field);
+    Page<EmployeeDTO> getEmployeeListBySorting(String field);
 
     Page<EmployeeDTO> getEmployeeListByPagination(Integer offset, Integer pageSize);
 
@@ -20,5 +20,5 @@ public interface EmployeeService {
 
     Page<ResponseDTO> getEmployeeListWithDepartmentsByPaginationAndSorting(String field, Integer offset, Integer pageSize);
 
-    List<EmployeeDTO> getEmployeeListByDepartmentIdWithPaginationAndSorting(String deptId, String field, Integer offset, Integer pageSize);
+    Page<EmployeeDTO> getEmployeeListByDepartmentIdWithPaginationAndSorting(String deptId, String field, Integer offset, Integer pageSize);
 }

@@ -30,7 +30,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/sort")
-    public ResponseEntity<List<EmployeeDTO>> getEmployeeListBySorting(@RequestParam(value = "field", required = false) String field) {
+    public ResponseEntity<Page<EmployeeDTO>> getEmployeeListBySorting(@RequestParam(value = "field", required = false) String field) {
         return ResponseEntity.ok(employeeService.getEmployeeListBySorting(field));
     }
 
@@ -50,7 +50,7 @@ public class EmployeeController {
         return ResponseEntity.ok(dtoPage);
     }
     @GetMapping("/dept/{deptId}")
-    public ResponseEntity<List<EmployeeDTO>> getEmployeeListByDepartmentIdWithPaginationAndSorting(@PathVariable("deptId") String deptId,@RequestParam(value = "offset", required = false) Integer offset, @RequestParam(value = "pageSize", required = false) Integer pageSize, @RequestParam(value = "field", required = false) String field) {
+    public ResponseEntity<Page<EmployeeDTO>> getEmployeeListByDepartmentIdWithPaginationAndSorting(@PathVariable("deptId") String deptId,@RequestParam(value = "offset", required = false) Integer offset, @RequestParam(value = "pageSize", required = false) Integer pageSize, @RequestParam(value = "field", required = false) String field) {
         return ResponseEntity.ok(employeeService.getEmployeeListByDepartmentIdWithPaginationAndSorting(deptId,field, offset, pageSize));
     }
 }

@@ -37,4 +37,9 @@ public class DepartmentController {
         return ResponseEntity.ok(departmentService.getEmployeeListWithDepartmentName(deptName, offset, pageSize, field));
     }
 
+    @GetMapping("/categoryex/{deptName}")
+    public ResponseEntity<?> getEmployeeListWithDepartmentNameExample2(@PathVariable("deptName") String deptName, @RequestParam(value = "offset", required = false) Integer offset, @RequestParam(value = "pageSize", required = false) Integer pageSize, @RequestParam(value = "field", required = false) String field) {
+        return ResponseEntity.ok(departmentService.getEmployeeListWithDepartmentNameExample1(deptName, offset, pageSize, field));
+    }
+
 }

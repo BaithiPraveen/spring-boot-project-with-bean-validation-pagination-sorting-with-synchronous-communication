@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 public class ResponseDTO {
 
     private EmployeeDTO employee;
-
     private DepartmentDTO department;
 
 }

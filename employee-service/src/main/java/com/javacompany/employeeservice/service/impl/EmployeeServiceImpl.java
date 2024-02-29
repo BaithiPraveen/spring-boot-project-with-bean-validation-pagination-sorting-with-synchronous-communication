@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -36,37 +37,29 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<EmployeeDTO> getEmployeeListBySorting(String field) {
-        List<Employee> employeeList;
-        if (field == null || field.isEmpty() || field.isBlank())
-            employeeList = employeeRepository.findAll(Sort.by(Sort.Direction.ASC, DefaultValues.DEFAULT_FIELD));
-        else employeeList = employeeRepository.findAll(Sort.by(Sort.Direction.ASC, field));
-        return employeeList.stream().map(employee -> modelMapper.map(employee, EmployeeDTO.class)).collect(Collectors.toList());
-    }
+    public Page<EmployeeDTO> getEmployeeListBySorting(String field) {
+        Pageable pageable = this.getPageableResponse(field,null,null);
+        Page<Employee> employeePage = employeeRepository.findAll(pageable);
+        return employeePage.map(employee -> modelMapper.map(employee, EmployeeDTO.class));    }
 
     @Override
     public Page<EmployeeDTO> getEmployeeListByPagination(Integer offset, Integer pageSize) {
-        int validatedOffset = offset != null ? offset : DefaultValues.DEFAULT_OFFSET;
-        int validatedPageSize = pageSize != null ? pageSize : DefaultValues.DEFAULT_PAGE_SIZE;
-        Page<Employee> employeePage = employeeRepository.findAll(PageRequest.of(validatedOffset, validatedPageSize));
+        Pageable pageable = this.getPageableResponse(null,offset,pageSize);
+        Page<Employee> employeePage = employeeRepository.findAll(pageable);
         return employeePage.map(employee -> modelMapper.map(employee, EmployeeDTO.class));
     }
 
     @Override
     public Page<EmployeeDTO> getEmployeeListByPaginationAndSorting(String field, Integer offset, Integer pageSize) {
-        int validatedOffset = offset != null ? offset : DefaultValues.DEFAULT_OFFSET;
-        int validatedPageSize = pageSize != null ? pageSize : DefaultValues.DEFAULT_PAGE_SIZE;
-        String ValidatedField = (field == null || field.isEmpty() || field.isBlank()) ? DefaultValues.DEFAULT_FIELD : field;
-        Page<Employee> employeePage = employeeRepository.findAll(PageRequest.of(validatedOffset, validatedPageSize).withSort(Sort.Direction.ASC, ValidatedField));
+        Pageable pageable = this.getPageableResponse(field,offset,pageSize);
+        Page<Employee> employeePage = employeeRepository.findAll(pageable);
         return employeePage.map(employee -> modelMapper.map(employee, EmployeeDTO.class));
     }
 
     @Override
     public Page<ResponseDTO> getEmployeeListWithDepartmentsByPaginationAndSorting(String field, Integer offset, Integer pageSize) {
-        int validatedOffset = offset != null ? offset : DefaultValues.DEFAULT_OFFSET;
-        int validatedPageSize = pageSize != null ? pageSize : DefaultValues.DEFAULT_PAGE_SIZE;
-        String validatedField = (field == null || field.isEmpty() || field.isBlank()) ? DefaultValues.DEFAULT_FIELD : field;
-        Page<Employee> employeePage = employeeRepository.findAll(PageRequest.of(validatedOffset, validatedPageSize).withSort(Sort.Direction.ASC, validatedField));
+        Pageable pageable = this.getPageableResponse(field,offset,pageSize);
+        Page<Employee> employeePage = employeeRepository.findAll(pageable);
         return employeePage.map(emp -> {
             ResponseDTO responseDTO = new ResponseDTO();
             responseDTO.setEmployee(modelMapper.map(emp, EmployeeDTO.class));
@@ -76,9 +69,17 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<EmployeeDTO> getEmployeeListByDepartmentIdWithPaginationAndSorting( String deptId,String field, Integer offset, Integer pageSize) {
-        List<Employee> byDepartmentId = employeeRepository.findByDepartmentId(deptId);
-        return byDepartmentId.stream().map(employee -> modelMapper.map(employee, EmployeeDTO.class)).collect(Collectors.toList());
+    public Page<EmployeeDTO> getEmployeeListByDepartmentIdWithPaginationAndSorting(String deptId, String field, Integer offset, Integer pageSize) {
+        Pageable pageable = this.getPageableResponse(field,offset,pageSize);
+        Page<Employee> employeePage = employeeRepository.findByDepartmentId(deptId, pageable);
+        return employeePage.map(employee -> modelMapper.map(employee, EmployeeDTO.class));
+    }
+
+    private Pageable getPageableResponse ( String field, Integer offset, Integer pageSize){
+        int validatedOffset = offset != null ? offset : DefaultValues.DEFAULT_OFFSET;
+        int validatedPageSize = pageSize != null ? pageSize : DefaultValues.DEFAULT_PAGE_SIZE;
+        String validatedField = (field == null || field.isEmpty() || field.isBlank()) ? DefaultValues.DEFAULT_FIELD : field;
+        return PageRequest.of(validatedOffset, validatedPageSize, Sort.by(Sort.Direction.ASC, validatedField));
     }
 }
 
