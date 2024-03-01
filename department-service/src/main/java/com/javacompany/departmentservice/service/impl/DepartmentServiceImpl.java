@@ -15,13 +15,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Field;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +24,6 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
     private final ModelMapper modelMapper;
-    private final WebClient webClient;
-    private final RestTemplate restTemplate;
     private final EmployeeAPIClient apiClient;
 
     @Override
@@ -41,7 +34,8 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public DepartmentDTO getDepartment(String deptCode) {
-        return modelMapper.map(departmentRepository.findByDepartmentCode(deptCode), DepartmentDTO.class);
+        Department department = departmentRepository.findByDepartmentCode(deptCode).orElseThrow(() -> new ResourceNotFoundException("DEPARTMENT", "DEPARTMENT_CODE", deptCode));
+        return modelMapper.map(department, DepartmentDTO.class);
     }
 
     @Override
@@ -53,7 +47,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public Page<EmployeeDTO> getEmployeeListWithDepartmentName(String departmentName, Integer offset, Integer pageSize, String field) {
-        Department departmentObject = departmentRepository.findByDepartmentName(departmentName);
+        Department departmentObject = departmentRepository.findByDepartmentName(departmentName).orElseThrow(() -> new ResourceNotFoundException("DEPARTMENT", "DEPARTMENT_NAME", departmentName));
         String departmentCode = departmentObject.getDepartmentCode();
         return apiClient.getEmployeeListByDepartmentIdWithPaginationAndSorting(departmentCode, offset, pageSize, field);
     }
@@ -75,25 +69,20 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
+    public Boolean existsByDepartmentName(String departmentName) {
+        return departmentRepository.existsByDepartmentName(departmentName);
+    }
+
+    @Override
+    public Department searchByDepartmentName(String departmentName) {
+        return departmentRepository.findByDepartmentName(departmentName).orElseThrow(() -> new ResourceNotFoundException("DEPARTMENT", "DEPARTMENT_NAME", departmentName));
+    }
+
+    @Override
     public String deleteDepartment(Long id) {
         Department department = departmentRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("DEPARTMENT","DEPARTMENT_ID",id));
         departmentRepository.deleteById(id);
-         return id+" THIS DEPARTMENT SUCCESSFULLY DELETED...!";
-    }
-
-
-    @Override
-    public List<EmployeeDTO> getEmployeeListWithDepartmentNameExample1(String departmentName, Integer offset, Integer pageSize, String field) {
-        Department departmentObject = departmentRepository.findByDepartmentName(departmentName);
-        String departmentCode = departmentObject.getDepartmentCode();
-        String uri = "http://localhost:8080/api/employee/dept/" + departmentCode;
-        Flux<EmployeeDTO> employeeDTOFlux = webClient
-                .get()
-                .uri(uri)
-                .retrieve()
-                .bodyToFlux(EmployeeDTO.class);
-        Mono<List<EmployeeDTO>> employeesDTOMono = employeeDTOFlux.collectList();
-        return employeesDTOMono.block();
+        return id + " THIS DEPARTMENT SUCCESSFULLY DELETED...!";
     }
 
     private Pageable getPageableResponse(String field, Integer offset, Integer pageSize) {
@@ -102,6 +91,4 @@ public class DepartmentServiceImpl implements DepartmentService {
         String validatedField = (field == null || field.isEmpty() || field.isBlank()) ? DefaultValues.DEFAULT_FIELD : field;
         return PageRequest.of(validatedOffset, validatedPageSize, Sort.by(Sort.Direction.ASC, validatedField));
     }
-
-
 }

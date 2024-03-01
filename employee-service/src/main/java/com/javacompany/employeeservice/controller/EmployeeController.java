@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("api/employee")
@@ -24,9 +23,25 @@ public class EmployeeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.saveEmployee(employeeDTO));
     }
 
+    @PostMapping("/createemployeewithdept")
+    public ResponseEntity<ResponseDTO> saveEmployeeWithDepartment(@Valid @RequestBody ResponseDTO responseDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.saveEmployeeWithDepartment(responseDTO));
+
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<EmployeeDTO> getEmployee(@PathVariable("id") Long id) {
         return ResponseEntity.ok(employeeService.getEmployee(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable("id") Long id, @RequestBody EmployeeDTO employeeDTO) throws NoSuchFieldException, IllegalAccessException {
+        return ResponseEntity.ok(employeeService.updateEmployee(id, employeeDTO));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteEmployee(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(employeeService.deleteEmployee(id));
     }
 
     @GetMapping("/sort")
@@ -54,13 +69,19 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.getEmployeeListByDepartmentIdWithPaginationAndSorting(deptId,field, offset, pageSize));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable("id") Long id,@RequestBody EmployeeDTO employeeDTO) throws NoSuchFieldException, IllegalAccessException {
-        return ResponseEntity.ok(employeeService.updateEmployee(id,employeeDTO));
+    @GetMapping("/search/email/{email}")
+    public ResponseEntity<EmployeeDTO> searchByEmail(@PathVariable("email") String email) {
+        return ResponseEntity.ok(employeeService.searchByEmail(email));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteEmployee(@PathVariable("id") Long id){
-        return ResponseEntity.ok(employeeService.deleteEmployee(id));
+    @GetMapping("/search/names/")
+    public Page<EmployeeDTO> searchByFirstNameOrLastName(@RequestParam("firstName") String firstName, @RequestParam("lastName") String lastName, @RequestParam(value = "offset", required = false) Integer offset, @RequestParam(value = "pageSize", required = false) Integer pageSize, @RequestParam(value = "field", required = false) String field) {
+        return employeeService.searchByFirstNameOrLastName(firstName, lastName, field, offset, pageSize);
     }
+
+    @GetMapping("/search/name/")
+    public Page<EmployeeDTO> searchByFirstNameAndLastName(@RequestParam("firstName") String firstName, @RequestParam("lastName") String lastName, @RequestParam(value = "offset", required = false) Integer offset, @RequestParam(value = "pageSize", required = false) Integer pageSize, @RequestParam(value = "field", required = false) String field) {
+        return employeeService.searchByFirstNameAndLastName(firstName, lastName, field, offset, pageSize);
+    }
+
 }
